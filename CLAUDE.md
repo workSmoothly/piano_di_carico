@@ -5,7 +5,8 @@ Strumento web per preparare i piani di carico dei container. L'utente inserisce 
 ## Chi lo usa
 
 - **Utente finale:** una persona che non è esperta di computer e lavora in logistica.
-- **Lingua:** tutta l'interfaccia è in **italiano semplice**. Usa frasi brevi, verbi chiari e niente termini tecnici.
+- **Lingua:** l'interfaccia è in **italiano semplice**, con la scelta **inglese** (bottoni "Italiano / English" in alto). Usa frasi brevi, verbi chiari e niente termini tecnici, in tutte e due le lingue.
+- **Traduzione:** nel codice i testi restano in italiano. `t('testo', {n})` li traduce con il dizionario `EN` (chiave = testo italiano, `{n}` = valore da inserire). I testi fissi dell'HTML si traducono da soli se il testo italiano è una chiave di `EN`. Le note e gli errori del blocco CORE restano in italiano (anche nei dati salvati) e si traducono quando si mostrano, con `trCore()` (lista `CORE_EN` di espressioni regolari). **Ogni nuovo testo dell'interfaccia va aggiunto a `EN`; ogni nuova nota o errore del CORE va aggiunto a `CORE_EN`.** La lingua scelta si salva in `localStorage` con la chiave `pianoCarico.lang`; senza scelta vale la lingua del browser (italiano se è italiano, altrimenti inglese).
 - **Messaggi di errore:** dicono cosa è successo e come risolvere.
 
 ## Struttura del progetto
@@ -81,8 +82,8 @@ La logica di calcolo è tra i commenti `CORE-START` e `CORE-END`. È fatta di fu
 ### Excel
 
 - **Modello vuoto:** il tasto "Scarica modello Excel" crea i fogli `Colli` e `Istruzioni`.
-- **Esportazione:** "Scarica Excel" crea i fogli `Colli`, `Piano` e `Riepilogo`. Nel foglio `Piano` l'ultima colonna (12ª) `Container` dice in quale container sta il collo (1, 2, ...). Nel `Riepilogo` le righe `Container`, `Container 2`, ... danno il tipo di ogni container; con più container segue una tabella per container.
-- **Reimportazione:** se un file caricato ha il foglio `Piano`, il tool ricostruisce anche la disposizione salvata. I file vecchi, senza colonna `Container`, valgono come container 1.
+- **Esportazione:** "Scarica Excel" crea i fogli `Colli`, `Piano` e `Riepilogo`. Nel foglio `Piano` l'ultima colonna (12ª) `Container` dice in quale container sta il collo (1, 2, ...). Nel `Riepilogo` le righe `Container`, `Container 2`, ... danno il tipo di ogni container; con più container segue una tabella per container. Con la lingua inglese i fogli si chiamano `Packages`, `Plan` e `Summary`, con titoli delle colonne e sì/no in inglese; le righe `Container`, `Container 2`, ... e l'ordine delle colonne non cambiano.
+- **Reimportazione:** se un file caricato ha il foglio `Piano`, il tool ricostruisce anche la disposizione salvata. I file vecchi, senza colonna `Container`, valgono come container 1. I fogli si riconoscono in tutte e due le lingue (`sheetOf()`), e la colonna `Ruotato` accetta sì/yes.
 - **Funzione di salvataggio:** `saveXlsx(wb, name)` prima prova `window.claude.use('downloads')`, che esiste solo quando la pagina è aperta dentro claude.ai. Altrimenti usa un normale link di download con Blob, ed è questo che funziona su GitHub Pages. Il ramo `window.claude` può restare, non dà problemi.
 
 ## Come testare
@@ -107,10 +108,10 @@ La logica di calcolo è tra i commenti `CORE-START` e `CORE-END`. È fatta di fu
 
 ## Regole per le modifiche
 
-- **Lingua:** testi dell'interfaccia in italiano semplice, maiuscola solo a inizio frase.
+- **Lingua:** testi dell'interfaccia in italiano semplice, maiuscola solo a inizio frase, con la traduzione inglese in `EN` (o `CORE_EN` per il blocco CORE).
 - **File unico:** niente nuove dipendenze se non servono. Se servono, usa un CDN (cdnjs o jsdelivr) con versione fissa.
 - **Comportamento:** non cambiare il sistema di coordinate o il formato dei fogli Excel senza mantenere la compatibilità con i file già salvati.
 - **Test:** dopo ogni modifica alla logica, rifai i test con Node descritti sopra.
-- **Versione:** la costante `APP_VERSION` (nel blocco interfaccia di `index.html`) si vede nel piè di pagina. Aggiornala a ogni rilascio: terzo numero per correzioni, secondo per nuove funzioni, primo per cambi che rompono la compatibilità (file Excel o dati salvati). 1.0.0 = container singolo, 1.1.0 = più container e soluzioni alternative, 1.2.0 = container preferiti e ricerca migliore, 1.3.0 = metodo per costo e confronto.
+- **Versione:** la costante `APP_VERSION` (nel blocco interfaccia di `index.html`) si vede nel piè di pagina. Aggiornala a ogni rilascio: terzo numero per correzioni, secondo per nuove funzioni, primo per cambi che rompono la compatibilità (file Excel o dati salvati). 1.0.0 = container singolo, 1.1.0 = più container e soluzioni alternative, 1.2.0 = container preferiti e ricerca migliore, 1.3.0 = metodo per costo e confronto, 1.4.0 = lingua inglese.
 - **Esempio:** "Carica esempio" usa `SAMPLE`, pensato per dare 2 container nella soluzione migliore e un'alternativa con 3. Se cambi l'algoritmo, controlla che lo mostri ancora.
 - **Commit:** non inserire mai la riga `Co-Authored-By` (né altre righe di attribuzione) nei messaggi di commit. Il messaggio deve avere al massimo 3 righe.

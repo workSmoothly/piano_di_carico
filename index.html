@@ -40,6 +40,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top-in{max-width:1280px;margin:0 auto;padding:18px 20px 0;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 28px}
 .top h1{margin:0 0 12px;font-size:34px;line-height:1}
 .top p{margin:0 0 14px;max-width:60ch;opacity:.9;font-size:15px}
+.lang{flex-basis:100%;display:flex;justify-content:flex-end;gap:4px;margin-bottom:-6px}
+.lang button{border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--steel-ink);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:14px}
+.lang button[aria-pressed="true"]{background:rgba(255,255,255,.22);font-weight:600}
 .tabs{display:flex;gap:4px;margin-left:auto;align-self:flex-end}
 .tab{border:0;background:rgba(255,255,255,.14);color:var(--steel-ink);padding:10px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-family:"Bahnschrift","Roboto Condensed","Arial Narrow",sans-serif;font-stretch:condensed;font-weight:600;font-size:19px}
 .tab[aria-selected="true"]{background:var(--bg);color:var(--ink)}
@@ -185,6 +188,10 @@ svg.plan text{font-family:"Bahnschrift","Roboto Condensed","Arial Narrow",sans-s
 <body>
 <header class="top">
   <div class="top-in">
+    <div class="lang" id="langSeg" role="group" aria-label="Lingua">
+      <button data-lang="it" lang="it" aria-pressed="true">Italiano</button>
+      <button data-lang="en" lang="en" aria-pressed="false">English</button>
+    </div>
     <div>
       <h1>Piano di carico</h1>
       <p>Inserisci i colli. Il programma sceglie il container più piccolo (o il minor numero di container) e prepara la disposizione. Poi puoi spostare i colli a mano.</p>
@@ -312,7 +319,7 @@ svg.plan text{font-family:"Bahnschrift","Roboto Condensed","Arial Narrow",sans-s
 <footer class="foot">
   <h2>I tuoi dati</h2>
   <p>I dati che inserisci restano solo su questo computer, nel browser. Il programma non li invia a nessun server e non usa cookie. Nessuno, oltre a te, può vederli.</p>
-  <p>La pagina è pubblicata su GitHub Pages e scarica due librerie da cdnjs (Cloudflare). Come ogni sito, questi servizi ricevono i dati tecnici della connessione, come l'indirizzo IP. Non ricevono i dati dei colli. Per sapere come li usano, leggi la <a href="https://docs.github.com/it/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">privacy di GitHub</a> e la <a href="https://www.cloudflare.com/it-it/privacypolicy/" target="_blank" rel="noopener">privacy di Cloudflare</a>.</p>
+  <p>La pagina è pubblicata su GitHub Pages e scarica due librerie da cdnjs (Cloudflare). Come ogni sito, questi servizi ricevono i dati tecnici della connessione, come l'indirizzo IP. Non ricevono i dati dei colli. Per sapere come li usano, leggi la <a href="https://docs.github.com/it/site-policy/privacy-policies/github-general-privacy-statement" data-href-en="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">privacy di GitHub</a> e la <a href="https://www.cloudflare.com/it-it/privacypolicy/" data-href-en="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">privacy di Cloudflare</a>.</p>
   <div class="row">
     <button class="btn danger" id="bWipe">Cancella i dati salvati</button>
     <span class="hint"><span id="appVer"></span> Programma gratuito e open source, con <a href="https://github.com/albanoandrea/piano_di_carico/blob/master/LICENSE" target="_blank" rel="noopener">licenza MIT</a>. Si usa senza garanzia: controlla sempre il piano prima di caricare.</span>
@@ -841,9 +848,210 @@ function expandRows(rows){
 const $=s=>document.querySelector(s);
 const PALETTE=['#D2AE74','#93BBA6','#93AED3','#CC98AA','#DDBB5E','#7FBDBD','#BBA6D6','#AFC072','#DDA27B','#A3B2BE','#D0CA80','#86ADDF','#C7B39A','#9CC58F'];
 const colorOf=row=>PALETTE[row%PALETTE.length];
-const fmt=(n,d=0)=>Number(n).toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt=(n,d=0)=>Number(n).toLocaleString(LANG==='en'?'en-GB':'it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
+
+// ---------- lingua ----------
+// I testi nel codice sono in italiano: t() li traduce in inglese con il dizionario EN.
+// {n} = valore da inserire. Le note e gli errori del blocco CORE (salvati in italiano) passano da trCore().
+const LANG_KEY='pianoCarico.lang';
+let LANG=(()=>{ try{ const l=localStorage.getItem(LANG_KEY); if(l==='it'||l==='en') return l; }catch(e){} return /^it\b/i.test(navigator.language||'it')?'it':'en'; })();
+const EN={
+  // pagina
+  'Piano di carico container':'Container load plan',
+  'Piano di carico':'Load plan',
+  'Inserisci i colli. Il programma sceglie il container più piccolo (o il minor numero di container) e prepara la disposizione. Poi puoi spostare i colli a mano.':'Enter your packages. The program picks the smallest container (or the fewest containers) and prepares the layout. Then you can move the packages by hand.',
+  '1. Colli':'1. Packages',
+  '2. Piano di carico':'2. Load plan',
+  'Scarica modello Excel':'Download Excel template',
+  'Carica file Excel':'Open Excel file',
+  'Incolla da Excel':'Paste from Excel',
+  'Aggiungi riga':'Add row',
+  'Carica esempio':'Load example',
+  'Svuota tabella':'Clear table',
+  'Codice / descrizione':'Code / description',
+  'Lunghezza cm':'Length cm','Larghezza cm':'Width cm','Altezza cm':'Height cm',
+  'Peso kg (1 collo)':'Weight kg (1 package)','Quantità':'Quantity','Sovrapponibile':'Stackable',
+  "Sovrapponibile = si può mettere un altro collo sopra. I colli possono girare ma non si ribaltano: l'altezza resta sempre quella.":'Stackable = another package can go on top. Packages can turn, but they never tip over: the height always stays the same.',
+  'Container e regole':'Containers and rules',
+  'Usa':'Use','Preferito':'Preferred','Nome':'Name','Lungh. interna cm':'Inside length cm','Largh. cm':'Width cm',
+  'Porta largh. cm':'Door width cm','Porta alt. cm':'Door height cm','Peso max kg':'Max weight kg','Costo':'Cost',
+  'Differenza altezza massima per appoggiare su 2 colli (cm)':'Max height difference to rest on 2 packages (cm)',
+  'Numero massimo di colli sotto':'Max number of packages underneath',
+  'Appoggio minimo della base (%)':'Minimum base support (%)',
+  'Numero massimo di container (da 1 a 5)':'Max number of containers (1 to 5)',
+  'Altre soluzioni: riempimento più basso al massimo del (%)':'Other solutions: fill at most this much lower (%)',
+  'Metodo di calcolo':'Calculation method',
+  'Normale':'Standard','Per costo (nuovo)':'By cost (new)','Confronta i due metodi':'Compare the two methods',
+  'Metodo per costo: parte dai container che costano meno e ne aumenta la misura o il numero finché non entra tutto. Prova ogni combinazione per 5 secondi, al massimo 1 minuto in tutto. Costo 0 = non usare quel container con questo metodo.':'By cost: starts from the cheapest containers and makes them bigger or adds more until everything fits. It tries each combination for 5 seconds, 1 minute at most in total. Cost 0 = do not use that container with this method.',
+  "Altre soluzioni: con 10%, se la soluzione migliore riempie l'80%, ti propongo anche quelle che riempiono almeno il 72%. Al massimo 3 soluzioni.":'Other solutions: with 10%, if the best solution fills 80%, you also see the ones that fill at least 72%. 3 solutions at most.',
+  'Ripristina valori standard':'Restore standard values',
+  'Usa = il programma può sceglierlo. Preferito = a parità di numero di container, il programma sceglie prima questi.':'Use = the program can choose it. Preferred = with the same number of containers, the program chooses these first.',
+  "Le misure dei container cambiano un po' tra le compagnie: controlla quelle del tuo spedizioniere.":'Container sizes change a little between companies: check the ones from your forwarder.',
+  'Calcola piano di carico':'Calculate load plan',
+  'Hai cambiato la tabella dei colli dopo il calcolo.':'You changed the package table after the calculation.',
+  'Ricalcola':'Recalculate',
+  'Tipo di container':'Container type',
+  'Aggiungi container':'Add container',
+  'Togli questo container':'Remove this container',
+  'Stampa':'Print','Scarica Excel':'Download Excel',
+  'Ruota (R)':'Rotate (R)','Togli dal container':'Remove from container',
+  "Trascina i colli per spostarli. Vista dall'alto: porte a destra.":'Drag the packages to move them. Top view: doors on the right.',
+  'Vista 3D':'3D view','Vista laterale':'Side view',
+  'Trascina per girare, rotella per zoom':'Drag to turn, mouse wheel to zoom',
+  'Colli fuori dal container':'Packages outside the container',
+  'I tuoi dati':'Your data',
+  'I dati che inserisci restano solo su questo computer, nel browser. Il programma non li invia a nessun server e non usa cookie. Nessuno, oltre a te, può vederli.':'The data you enter stays only on this computer, in the browser. The program does not send it to any server and does not use cookies. Nobody but you can see it.',
+  'La pagina è pubblicata su GitHub Pages e scarica due librerie da cdnjs (Cloudflare). Come ogni sito, questi servizi ricevono i dati tecnici della connessione, come l\'indirizzo IP. Non ricevono i dati dei colli. Per sapere come li usano, leggi la':'The page is hosted on GitHub Pages and loads two libraries from cdnjs (Cloudflare). Like any website, these services receive the technical data of the connection, such as the IP address. They do not receive your package data. To learn how they use it, read the',
+  'privacy di GitHub':'GitHub privacy statement','e la':'and the','privacy di Cloudflare':'Cloudflare privacy policy',
+  'Cancella i dati salvati':'Delete saved data',
+  'Programma gratuito e open source, con':'Free and open source program, with','licenza MIT':'MIT license',
+  '. Si usa senza garanzia: controlla sempre il piano prima di caricare.':'. No warranty: always check the plan before loading.',
+  'In Excel seleziona le righe e copia (Ctrl+C). Poi clicca qui sotto e incolla (Ctrl+V). La riga dei titoli può esserci o no.':'In Excel, select the rows and copy (Ctrl+C). Then click below and paste (Ctrl+V). The title row is optional.',
+  'Codice\tLunghezza\tLarghezza\tAltezza\tPeso\tQuantità\tSovrapponibile':'Code\tLength\tWidth\tHeight\tWeight\tQuantity\tStackable',
+  'Sostituisci la tabella':'Replace the table','Aggiungi alla tabella':'Add to the table','Annulla':'Cancel',
+  'Livello':'Level','Lingua':'Language',
+  // tabella colli
+  'La tabella è vuota. Incolla le righe da Excel, carica un file o aggiungi una riga.':'The table is empty. Paste rows from Excel, open a file or add a row.',
+  'Codice riga {n}':'Code row {n}','Lunghezza riga {n}':'Length row {n}','Larghezza riga {n}':'Width row {n}','Altezza riga {n}':'Height row {n}',
+  'Peso riga {n}':'Weight row {n}','Quantità riga {n}':'Quantity row {n}','Sovrapponibile riga {n}':'Stackable row {n}','Elimina riga {n}':'Delete row {n}','Elimina riga':'Delete row',
+  'Colli':'Packages','Volume':'Volume','Peso totale':'Total weight',
+  'Esempio caricato':'Example loaded','Tabella svuotata':'Table cleared','Sicuro? Clicca ancora':'Sure? Click again',
+  'Non ho trovato righe valide. Servono almeno lunghezza, larghezza e altezza.':'No valid rows found. You need at least length, width and height.',
+  'Importate {n} righe.':'{n} rows imported.','{n} righe saltate (misure mancanti).':'{n} rows skipped (sizes missing).',
+  'Non riesco a leggere Excel ora. Usa "Incolla da Excel".':'Cannot read Excel right now. Use "Paste from Excel".',
+  'Non riesco a leggere questo file. Prova con "Incolla da Excel".':'Cannot read this file. Try "Paste from Excel".',
+  'Usa {n}':'Use {n}','Preferito {n}':'Preferred {n}','Costo {n}':'Cost {n}',
+  'Valori standard ripristinati':'Standard values restored',
+  // calcolo
+  'Inserisci almeno un collo con le misure.':'Enter at least one package with its sizes.',
+  'Calcolo in corso… Può servire fino a 10 secondi.':'Calculating… It can take up to 10 seconds.',
+  'Calcolo in corso… Può servire fino a un minuto o poco più.':'Calculating… It can take up to a minute or a little more.',
+  'Scegli almeno un container in "Container e regole".':'Choose at least one container in "Containers and rules".',
+  // piano
+  'Soluzioni proposte':'Proposed solutions',
+  'Confronto tra i due metodi: la soluzione 1 è del metodo per costo, le altre del metodo normale.':'Comparison of the two methods: solution 1 comes from the cost method, the others from the standard method.',
+  'Hanno un riempimento simile. Scegli quella che preferisci: la soluzione 1 usa meno container.':'They have a similar fill. Choose the one you like: solution 1 uses fewer containers.',
+  'Soluzione {n}':'Solution {n}','Volume usato {n}%':'Volume used {n}%','costo {n}':'cost {n}',
+  'Metodo per costo':'Cost method','Metodo normale':'Standard method','non entra tutto':'not everything fits',
+  '{n} colli':'{n} packages',
+  'Container {n} di {m}':'Container {n} of {m}','Container più piccolo che basta':'Smallest container that fits','Container':'Container',
+  'In totale: <b>{n} container</b>, <b>{a} di {b}</b> colli caricati, <b>{kg} kg</b>, volume usato <b>{v}%</b>.':'In total: <b>{n} containers</b>, <b>{a} of {b}</b> packages loaded, <b>{kg} kg</b>, volume used <b>{v}%</b>.',
+  'colli in questo container':'packages in this container','{a} di {b}':'{a} of {b}','colli caricati':'packages loaded','volume usato':'volume used',
+  'su {n} kg massimi':'of {n} kg maximum','usati su {n} m di lunghezza':'used of {n} m length','baricentro dal fondo (metà: {n} m)':'centre of gravity from the back (middle: {n} m)',
+  '1 collo ha un problema (bordo rosso). Clicca il collo per vedere quale.':'1 package has a problem (red border). Click the package to see which one.',
+  '{n} colli hanno un problema (bordo rosso). Clicca il collo per vedere quale.':'{n} packages have a problem (red border). Click the package to see which one.',
+  '1 collo non entra.':'1 package does not fit.','{n} colli non entrano.':'{n} packages do not fit.',
+  'Aggiungi un container o scegline uno più grande, poi premi "Ricalcola".':'Add a container or choose a bigger one, then press "Recalculate".',
+  'Peso oltre il massimo del container.':'Weight over the container maximum.',
+  'Tutti':'All','A terra':'Floor','Livello {n}':'Level {n}',
+  "Vista dall'alto del container":'Top view of the container','Porte':'Doors','Fondo':'Back','Lato sinistro, visto dalle porte':'Left side, seen from the doors',
+  'livello {n}':'level {n}','Vista dal lato sinistro':'Seen from the left side',
+  'Nessun collo scelto':'No package selected',
+  'Clicca un collo nel disegno per vedere i dati, ruotarlo o toglierlo. Con la tastiera: R ruota, frecce spostano di 1 cm (con Maiusc 10 cm), Canc toglie.':'Click a package in the drawing to see its data, rotate it or remove it. With the keyboard: R rotates, arrows move by 1 cm (with Shift 10 cm), Delete removes.',
+  'Misure':'Sizes','{l} × {w} cm, alto {h} cm':'{l} × {w} cm, {h} cm high',' (ruotato)':' (rotated)','Peso':'Weight',
+  'sì':'yes','no':'no','a terra':'on the floor','livello {n} (a {z} cm da terra)':'level {n} ({z} cm from the floor)',
+  'Dal fondo':'From the back','Dal lato sinistro':'From the left side','Ruota':'Rotate','Sposta nel container {n}':'Move to container {n}',
+  'Tutti i colli sono nei container.':'All packages are in the containers.','Tutti i colli sono nel container.':'All packages are in the container.',
+  'Clicca un collo per metterlo nel primo posto libero.':'Click a package to put it in the first free place.',
+  'Clicca un collo per metterlo nel primo posto libero del container {n}.':'Click a package to put it in the first free place of container {n}.',
+  "Non c'è un posto libero per questo collo. Prova a spostare altri colli o a cambiare container.":'There is no free place for this package. Try moving other packages or changing the container.',
+  "Nel container {n} non c'è un posto libero per questo collo.":'There is no free place for this package in container {n}.',
+  'Container cambiato. Premi "Ricalcola" per una nuova disposizione automatica.':'Container changed. Press "Recalculate" for a new automatic layout.',
+  'Container aggiunto. Clicca i colli fuori per caricarli, oppure premi "Ricalcola".':'Container added. Click the packages outside to load them, or press "Recalculate".',
+  'Container tolto. I suoi colli sono nella lista dei colli fuori.':'Container removed. Its packages are in the list of packages outside.','Container tolto.':'Container removed.',
+  // Excel
+  'Excel non disponibile in questo momento.':'Excel is not available right now.',
+  'Excel non disponibile in questo momento. Riprova tra poco.':'Excel is not available right now. Try again in a moment.',
+  'File salvato':'File saved','Non riesco a salvare il file qui.':'Cannot save the file here.',
+  'Ho caricato anche il piano salvato nel file.':'I also loaded the plan saved in the file.',
+  'Codice':'Code','Lunghezza (cm)':'Length (cm)','Larghezza (cm)':'Width (cm)','Altezza (cm)':'Height (cm)','Peso (kg)':'Weight (kg)',
+  'N.':'No.','Dal fondo (cm)':'From the back (cm)','Dal lato sinistro (cm)':'From the left side (cm)','Da terra (cm)':'From the floor (cm)','Ruotato':'Rotated',
+  'Misure interne (cm)':'Inside sizes (cm)','Colli caricati':'Packages loaded','Colli fuori':'Packages outside','Peso caricato (kg)':'Loaded weight (kg)','Peso massimo (kg)':'Max weight (kg)',
+  'N. container':'Container no.','Tipo':'Type','Volume usato (%)':'Volume used (%)',
+  'Piano':'Plan','Riepilogo':'Summary','Istruzioni':'Instructions','piano-di-carico-':'load-plan-','modello-colli.xlsx':'packages-template.xlsx',
+  'Peso 1 collo (kg)':'Weight 1 package (kg)','Sovrapponibile (sì/no)':'Stackable (yes/no)',
+  'Come compilare il foglio "Colli"':'How to fill in the "Packages" sheet',
+  '1. Scrivi una riga per ogni tipo di collo. Non cambiare la prima riga con i titoli.':'1. Write one row for each type of package. Do not change the first row with the titles.',
+  '2. Misure in centimetri, peso in kg di UN collo.':'2. Sizes in centimetres, weight in kg of ONE package.',
+  '3. Quantità = quanti colli uguali ci sono. Se lasci vuoto vale 1.':'3. Quantity = how many identical packages there are. If empty, it is 1.',
+  '4. Sovrapponibile: scrivi "sì" se si può mettere un altro collo sopra, "no" se non si può. Se lasci vuoto vale "sì".':'4. Stackable: write "yes" if another package can go on top, "no" if it cannot. If empty, it is "yes".',
+  '5. Salva il file e caricalo nel programma con il tasto "Carica file Excel".':'5. Save the file and open it in the program with the "Open Excel file" button.',
+  'Esempio:':'Example:',
+  // stampa
+  'Piano di carico: {n}':'Load plan: {n}',
+  'Colli caricati: {a} di {b}. Peso: {kg} kg. Porte a destra nei disegni.':'Packages loaded: {a} of {b}. Weight: {kg} kg. Doors on the right in the drawings.',
+  'Container {n} ({c}): ':'Container {n} ({c}): ','Container {n}: {c}':'Container {n}: {c}','Colli: {n}. Peso: {kg} kg.':'Packages: {n}. Weight: {kg} kg.',
+  "vista dall'alto, tutti i livelli":'top view, all levels','vista laterale':'side view','ordine di carico (dal fondo alle porte)':'loading order (from the back to the doors)',
+  'Misure cm':'Sizes cm','Peso kg':'Weight kg',
+  'La stampa non è disponibile qui. Usa "Scarica Excel".':'Printing is not available here. Use "Download Excel".',
+  'Versione {n}.':'Version {n}.'
+};
+function t(s,p){
+  let r=LANG==='en'&&EN[s]!=null?EN[s]:s;
+  if(p) r=r.replace(/\{(\w+)\}/g,(m,k)=>p[k]!=null?p[k]:m);
+  return r;
+}
+// note e errori del blocco CORE: traduzione per pezzi di frase (l'ordine conta)
+const dec=s=>s.replace(',','.');
+const CORE_EN=[
+  [/^Un solo container non basta: il carico è diviso su (\d+) container\.$/,'One container is not enough: the load is split over $1 containers.'],
+  [/^Il carico è diviso su (\d+) container\.$/,'The load is split over $1 containers.'],
+  [/^Anche con (\d+) container non entra tutto\.$/,'Even with $1 containers, not everything fits.'],
+  [/\b1 collo non passa dalla porta di nessun container\./,'1 package does not fit through the door of any container.'],
+  [/(\d+) colli non passano dalla porta di nessun container\./,'$1 packages do not fit through the door of any container.'],
+  [/^(.*) non basta: (.*)\.$/,'$1 is not enough: $2.'],
+  [/\b1 collo non passa dalla porta/,'1 package does not fit through the door'],
+  [/(\d+) colli non passano dalla porta/,'$1 packages do not fit through the door'],
+  [/resta fuori 1 collo/,'1 package is left out'],
+  [/restano fuori (\d+) colli/,'$1 packages are left out'],
+  [/i colli occupano più spazio del container/,'the packages take more space than the container'],
+  [/peso troppo alto/,'weight too high'],
+  [/^Metodo per costo: provata 1 combinazione in ([\d,]+) secondi\.$/,(m,a)=>'Cost method: tried 1 combination in '+dec(a)+' seconds.'],
+  [/^Metodo per costo: provate (\d+) combinazioni in ([\d,]+) secondi\.$/,(m,n,a)=>'Cost method: tried '+n+' combinations in '+dec(a)+' seconds.'],
+  [/^Tempo finito: questa è la soluzione migliore trovata, ma non entra tutto\.$/,'Time is up: this is the best solution found, but not everything fits.'],
+  [/^Nessuna combinazione basta per tutti i colli\.$/,'No combination fits all the packages.'],
+  [/^Confronto: metodo normale ([\d,]+) s, metodo per costo ([\d,]+) s\.$/,(m,a,b)=>'Comparison: standard method '+dec(a)+' s, cost method '+dec(b)+' s.'],
+  [/^1 riga senza misure non è stata considerata\.$/,'1 row without sizes was not used.'],
+  [/^(\d+) righe senza misure non sono state considerate\.$/,'$1 rows without sizes were not used.'],
+  [/^Piano caricato dal file Excel\.$/,'Plan loaded from the Excel file.'],
+  [/^Le misure erano in metri: le ho convertite in cm\.$/,'The sizes were in metres: I converted them to cm.'],
+  [/^Le misure erano in mm: le ho convertite in cm\.$/,'The sizes were in mm: I converted them to cm.'],
+  [/^Appoggiato su un collo non sovrapponibile$/,'Resting on a package that is not stackable'],
+  [/^Appoggiato su (\d+) colli \(massimo (\d+)\)$/,'Resting on $1 packages (maximum $2)'],
+  [/^Base appoggiata solo al (\d+)% \(minimo ([\d.]+)%\)$/,'Base supported only for $1% (minimum $2%)'],
+  [/^Esce dal container$/,'Goes outside the container'],
+  [/^Troppo alto per il container$/,'Too high for the container'],
+  [/^Non passa dalla porta$/,'Does not fit through the door'],
+  [/^Si sovrappone a un altro collo$/,'Overlaps another package']
+];
+function trCore(s){
+  if(LANG!=='en') return s;
+  for(const [re,to] of CORE_EN) s=s.replace(re,to);
+  return s;
+}
+// testi fissi della pagina: si salva l'italiano la prima volta, poi si traduce
+const STATIC_TXT=[], STATIC_ATTR=[];
+(function collectStatic(){
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode.closest('script,#printArea,#toast')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  for(let n;(n=w.nextNode());){ const k=n.nodeValue.trim(); if(k && EN[k]!=null) STATIC_TXT.push([n,n.nodeValue,k]); }
+  document.querySelectorAll('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(a=>{
+    const v=el.getAttribute(a); if(v && EN[v]!=null) STATIC_ATTR.push([el,a,v]);
+  }));
+})();
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.title=t('Piano di carico container');
+  for(const [n,orig,k] of STATIC_TXT) n.nodeValue=orig.replace(k,t(k));
+  for(const [el,a,v] of STATIC_ATTR) el.setAttribute(a,t(v));
+  document.querySelectorAll('a[data-href-en]').forEach(a=>{ a.dataset.hrefIt=a.dataset.hrefIt||a.getAttribute('href'); a.href=LANG==='en'?a.dataset.hrefEn:a.dataset.hrefIt; });
+  document.querySelectorAll('#langSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===LANG));
+  $('#appVer').textContent=t('Versione {n}.',{n:APP_VERSION});
+  // i bottoni "Sicuro? Clicca ancora" cambiano testo: si rimettono a posto qui
+  $('#bClear').textContent=t('Svuota tabella'); $('#bWipe').textContent=t('Cancella i dati salvati'); $('#bDelCont').textContent=t('Togli questo container');
+  clearArm=wipeArm=delArm=0;
+}
 // esempio: la soluzione migliore usa 2 container, l'alternativa 3
 const SAMPLE=[
   {code:'PAL-A',l:120,w:80,h:110,kg:450,qty:24,stack:true},
@@ -852,7 +1060,6 @@ const SAMPLE=[
   {code:'CASSA 2',l:150,w:90,h:60,kg:120,qty:10,stack:false},
   {code:'MACCHINA',l:240,w:150,h:180,kg:1500,qty:3,stack:false}
 ];
-$('#appVer').textContent='Versione '+APP_VERSION+'.';
 // sols = soluzioni proposte; plan = soluzione scelta (sols[si]); cc = container che si sta guardando
 const S={rows:[],containers:JSON.parse(JSON.stringify(DEFAULT_CONTAINERS)),opts:{...DEFAULT_OPTS},sols:[],si:0,plan:null,cc:0,planRowsKey:'',sel:null,level:'all',view2:'3d',step:1};
 const KEY='pianoCarico.v1';
@@ -882,18 +1089,18 @@ function toast(msg,ms=3200){ const t=$('#toast'); t.textContent=msg; t.classList
 // ---------- STEP 1: tabella ----------
 function renderTable(){
   const tb=$('#tbody');
-  if(!S.rows.length){ tb.innerHTML='<tr><td colspan="9" class="hint" style="padding:18px">La tabella è vuota. Incolla le righe da Excel, carica un file o aggiungi una riga.</td></tr>'; renderTotals(); return; }
-  tb.innerHTML=S.rows.map((r,i)=>`<tr data-i="${i}">
+  if(!S.rows.length){ tb.innerHTML=`<tr><td colspan="9" class="hint" style="padding:18px">${t('La tabella è vuota. Incolla le righe da Excel, carica un file o aggiungi una riga.')}</td></tr>`; renderTotals(); return; }
+  tb.innerHTML=S.rows.map((r,i)=>{ const n={n:i+1}; return `<tr data-i="${i}">
     <td class="num"><span class="swatch" style="background:${colorOf(i)}"></span>${i+1}</td>
-    <td><input type="text" data-k="code" value="${esc(r.code||'')}" aria-label="Codice riga ${i+1}"></td>
-    <td><input type="number" min="1" data-k="l" value="${r.l??''}" aria-label="Lunghezza riga ${i+1}"></td>
-    <td><input type="number" min="1" data-k="w" value="${r.w??''}" aria-label="Larghezza riga ${i+1}"></td>
-    <td><input type="number" min="1" data-k="h" value="${r.h??''}" aria-label="Altezza riga ${i+1}"></td>
-    <td><input type="number" min="0" data-k="kg" value="${r.kg??''}" aria-label="Peso riga ${i+1}"></td>
-    <td><input type="number" min="1" step="1" data-k="qty" value="${r.qty??1}" aria-label="Quantità riga ${i+1}"></td>
-    <td class="chk"><input type="checkbox" data-k="stack" ${r.stack?'checked':''} aria-label="Sovrapponibile riga ${i+1}"></td>
-    <td><button class="del" data-del="${i}" aria-label="Elimina riga ${i+1}" title="Elimina riga">×</button></td>
-  </tr>`).join('');
+    <td><input type="text" data-k="code" value="${esc(r.code||'')}" aria-label="${t('Codice riga {n}',n)}"></td>
+    <td><input type="number" min="1" data-k="l" value="${r.l??''}" aria-label="${t('Lunghezza riga {n}',n)}"></td>
+    <td><input type="number" min="1" data-k="w" value="${r.w??''}" aria-label="${t('Larghezza riga {n}',n)}"></td>
+    <td><input type="number" min="1" data-k="h" value="${r.h??''}" aria-label="${t('Altezza riga {n}',n)}"></td>
+    <td><input type="number" min="0" data-k="kg" value="${r.kg??''}" aria-label="${t('Peso riga {n}',n)}"></td>
+    <td><input type="number" min="1" step="1" data-k="qty" value="${r.qty??1}" aria-label="${t('Quantità riga {n}',n)}"></td>
+    <td class="chk"><input type="checkbox" data-k="stack" ${r.stack?'checked':''} aria-label="${t('Sovrapponibile riga {n}',n)}"></td>
+    <td><button class="del" data-del="${i}" aria-label="${t('Elimina riga {n}',n)}" title="${t('Elimina riga')}">×</button></td>
+  </tr>`; }).join('');
   markBad(); renderTotals();
 }
 function markBad(){
@@ -905,7 +1112,7 @@ function markBad(){
 function renderTotals(){
   const u=expandRows(S.rows);
   const v=u.reduce((s,x)=>s+x.l*x.w*x.h,0)/1e6, kg=u.reduce((s,x)=>s+x.kg,0);
-  $('#totals').innerHTML=`<span>Colli: <b>${fmt(u.length)}</b></span><span>Volume: <b>${fmt(v,2)} m³</b></span><span>Peso totale: <b>${fmt(kg)} kg</b></span>`;
+  $('#totals').innerHTML=`<span>${t('Colli')}: <b>${fmt(u.length)}</b></span><span>${t('Volume')}: <b>${fmt(v,2)} m³</b></span><span>${t('Peso totale')}: <b>${fmt(kg)} kg</b></span>`;
 }
 $('#tbody').addEventListener('input',e=>{
   const inp=e.target, tr=inp.closest('tr[data-i]'); if(!tr) return;
@@ -921,20 +1128,20 @@ $('#tbody').addEventListener('click',e=>{
   S.rows.splice(+d.dataset.del,1); renderTable(); save(); updateStale();
 });
 $('#bAdd').onclick=()=>{ S.rows.push({code:'',l:null,w:null,h:null,kg:null,qty:1,stack:true}); renderTable(); save(); const ins=$('#tbody').querySelectorAll('tr:last-child input'); if(ins[0]) ins[0].focus(); };
-$('#bSample').onclick=()=>{ S.rows=JSON.parse(JSON.stringify(SAMPLE)); renderTable(); save(); updateStale(); toast('Esempio caricato'); };
+$('#bSample').onclick=()=>{ S.rows=JSON.parse(JSON.stringify(SAMPLE)); renderTable(); save(); updateStale(); toast(t('Esempio caricato')); };
 let clearArm=0;
 $('#bClear').onclick=()=>{
   const b=$('#bClear');
-  if(Date.now()-clearArm<3500){ S.rows=[]; renderTable(); save(); updateStale(); b.textContent='Svuota tabella'; clearArm=0; toast('Tabella svuotata'); return; }
-  clearArm=Date.now(); b.textContent='Sicuro? Clicca ancora';
-  setTimeout(()=>{ if(Date.now()-clearArm>=3400) b.textContent='Svuota tabella'; },3500);
+  if(Date.now()-clearArm<3500){ S.rows=[]; renderTable(); save(); updateStale(); b.textContent=t('Svuota tabella'); clearArm=0; toast(t('Tabella svuotata')); return; }
+  clearArm=Date.now(); b.textContent=t('Sicuro? Clicca ancora');
+  setTimeout(()=>{ if(Date.now()-clearArm>=3400) b.textContent=t('Svuota tabella'); },3500);
 };
 let wipeArm=0;
 $('#bWipe').onclick=()=>{
   const b=$('#bWipe');
   if(Date.now()-wipeArm<3500){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); return; }
-  wipeArm=Date.now(); b.textContent='Sicuro? Clicca ancora';
-  setTimeout(()=>{ if(Date.now()-wipeArm>=3400) b.textContent='Cancella i dati salvati'; },3500);
+  wipeArm=Date.now(); b.textContent=t('Sicuro? Clicca ancora');
+  setTimeout(()=>{ if(Date.now()-wipeArm>=3400) b.textContent=t('Cancella i dati salvati'); },3500);
 };
 
 // incolla
@@ -949,12 +1156,12 @@ function textToMatrix(t){
   return lines.map(l=>l.split(sep));
 }
 function importRows(res,replace){
-  if(!res.rows.length){ toast('Non ho trovato righe valide. Servono almeno lunghezza, larghezza e altezza.',4500); return false; }
+  if(!res.rows.length){ toast(t('Non ho trovato righe valide. Servono almeno lunghezza, larghezza e altezza.'),4500); return false; }
   S.rows=replace?res.rows:S.rows.concat(res.rows);
   renderTable(); save(); updateStale();
-  let m=`Importate ${res.rows.length} righe.`;
-  if(res.skipped) m+=` ${res.skipped} righe saltate (misure mancanti).`;
-  if(res.note) m+=' '+res.note;
+  let m=t('Importate {n} righe.',{n:res.rows.length});
+  if(res.skipped) m+=' '+t('{n} righe saltate (misure mancanti).',{n:res.skipped});
+  if(res.note) m+=' '+trCore(res.note);
   toast(m,5000); return true;
 }
 $('#pmReplace').onclick=()=>{ if(importRows(parseTable(textToMatrix($('#pasteText').value)),true)) closePaste(); };
@@ -971,26 +1178,26 @@ document.addEventListener('paste',e=>{
 $('#bFile').onclick=()=>$('#fileIn').click();
 $('#fileIn').onchange=async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f) return;
-  if(!window.XLSX){ toast('Non riesco a leggere Excel ora. Usa "Incolla da Excel".',5000); return; }
+  if(!window.XLSX){ toast(t('Non riesco a leggere Excel ora. Usa "Incolla da Excel".'),5000); return; }
   try{
     const buf=await f.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array'});
-    const sh=wb.Sheets['Colli']||wb.Sheets[wb.SheetNames[0]];
+    const sh=sheetOf(wb,'Colli')||wb.Sheets[wb.SheetNames[0]];
     const mx=XLSX.utils.sheet_to_json(sh,{header:1,raw:true,defval:''});
     const res=parseTable(mx);
     if(!importRows(res,true)) return;
-    if(wb.Sheets['Piano']) restorePlanFromSheet(wb);
-  }catch(err){ toast('Non riesco a leggere questo file. Prova con "Incolla da Excel".',5000); }
+    if(sheetOf(wb,'Piano')) restorePlanFromSheet(wb);
+  }catch(err){ toast(t('Non riesco a leggere questo file. Prova con "Incolla da Excel".'),5000); }
 };
 
 // impostazioni container
 function renderSettings(){
   $('#contBody').innerHTML=S.containers.map((c,i)=>`<tr data-i="${i}">
-    <td><input type="checkbox" data-k="use" ${c.use?'checked':''} aria-label="Usa ${esc(c.name)}"></td>
-    <td><input type="checkbox" data-k="pref" ${c.pref?'checked':''} aria-label="Preferito ${esc(c.name)}"></td>
+    <td><input type="checkbox" data-k="use" ${c.use?'checked':''} aria-label="${t('Usa {n}',{n:esc(c.name)})}"></td>
+    <td><input type="checkbox" data-k="pref" ${c.pref?'checked':''} aria-label="${t('Preferito {n}',{n:esc(c.name)})}"></td>
     <td><input type="text" data-k="name" value="${esc(c.name)}"></td>
     ${['L','W','H','doorW','doorH','maxKg'].map(k=>`<td><input type="number" min="1" data-k="${k}" value="${c[k]}"></td>`).join('')}
-    <td><input type="number" min="0" step="0.1" data-k="cost" value="${c.cost||0}" aria-label="Costo ${esc(c.name)}"></td>
+    <td><input type="number" min="0" step="0.1" data-k="cost" value="${c.cost||0}" aria-label="${t('Costo {n}',{n:esc(c.name)})}"></td>
   </tr>`).join('');
   $('#oTol').value=S.opts.tol; $('#oMax').value=S.opts.maxSup; $('#oMin').value=S.opts.minSup;
   $('#oCont').value=S.opts.maxCont; $('#oGap').value=S.opts.altGap; $('#oAlgo').value=S.opts.algo||'std';
@@ -1008,16 +1215,16 @@ $('#contBody').addEventListener('input',e=>{
   save(); updateStale();
 }));
 $('#oAlgo').addEventListener('change',e=>{ S.opts.algo=e.target.value; save(); updateStale(); });
-$('#bResetCont').onclick=()=>{ S.containers=JSON.parse(JSON.stringify(DEFAULT_CONTAINERS)); S.opts={...DEFAULT_OPTS}; renderSettings(); save(); updateStale(); toast('Valori standard ripristinati'); };
+$('#bResetCont').onclick=()=>{ S.containers=JSON.parse(JSON.stringify(DEFAULT_CONTAINERS)); S.opts={...DEFAULT_OPTS}; renderSettings(); save(); updateStale(); toast(t('Valori standard ripristinati')); };
 
 // ---------- calcolo ----------
 // forceCis: tipi di container scelti a mano (ricalcola solo la soluzione che si sta guardando)
 function calculate(forceCis){
   const units=expandRows(S.rows);
   const bad=S.rows.filter(r=>!(r.l>0&&r.w>0&&r.h>0)).length;
-  if(!units.length){ toast('Inserisci almeno un collo con le misure.'); return; }
+  if(!units.length){ toast(t('Inserisci almeno un collo con le misure.')); return; }
   const algo=forceCis?'std':(S.opts.algo||'std');
-  $('#calcMsg').textContent='Calcolo in corso… '+(algo==='std'?'Può servire fino a 10 secondi.':'Può servire fino a un minuto o poco più.'); $('#bCalc').disabled=true;
+  $('#calcMsg').textContent=t(algo==='std'?'Calcolo in corso… Può servire fino a 10 secondi.':'Calcolo in corso… Può servire fino a un minuto o poco più.'); $('#bCalc').disabled=true;
   setTimeout(()=>{
     const badNote=bad?bad+(bad===1?' riga senza misure non è stata considerata.':' righe senza misure non sono state considerate.'):'';
     if(forceCis){
@@ -1039,7 +1246,7 @@ function calculate(forceCis){
           sols=c.concat(sols); sols.forEach(x=>x.notes.unshift(msg));
         } else sols=c||sols;
       }
-      if(!sols){ $('#calcMsg').textContent=''; $('#bCalc').disabled=false; toast('Scegli almeno un container in "Container e regole".'); return; }
+      if(!sols){ $('#calcMsg').textContent=''; $('#bCalc').disabled=false; toast(t('Scegli almeno un container in "Container e regole".')); return; }
       if(badNote) sols.forEach(s=>s.notes.push(badNote));
       setSols(sols,0);
     }
@@ -1083,14 +1290,14 @@ function renderSols(){
   const el=$('#solBox');
   el.classList.toggle('hidden',S.sols.length<2);
   if(S.sols.length<2) return;
-  el.innerHTML=`<h3 class="sub">Soluzioni proposte</h3><p class="hint" style="margin:0">${S.sols.some(x=>x.method==='cost')&&S.sols.some(x=>x.method==='std')?'Confronto tra i due metodi: la soluzione 1 è del metodo per costo, le altre del metodo normale.':'Hanno un riempimento simile. Scegli quella che preferisci: la soluzione 1 usa meno container.'}</p>
-    <div class="sols">${S.sols.map((s,i)=>`<button class="sol" data-si="${i}" aria-pressed="${i===S.si}"><b>Soluzione ${i+1}</b><span>${esc(solName(s))}</span><span class="hint">Volume usato ${fmt(solFill(s)*100)}%${solCost(s)?' · costo '+(+solCost(s).toFixed(2)).toLocaleString('it-IT'):''}</span>${s.method&&S.sols.some(x=>x.method&&x.method!==s.method)?`<span class="hint">${s.method==='cost'?'Metodo per costo':'Metodo normale'}${s.fit?'':' · non entra tutto'}</span>`:''}</button>`).join('')}</div>`;
+  el.innerHTML=`<h3 class="sub">${t('Soluzioni proposte')}</h3><p class="hint" style="margin:0">${t(S.sols.some(x=>x.method==='cost')&&S.sols.some(x=>x.method==='std')?'Confronto tra i due metodi: la soluzione 1 è del metodo per costo, le altre del metodo normale.':'Hanno un riempimento simile. Scegli quella che preferisci: la soluzione 1 usa meno container.')}</p>
+    <div class="sols">${S.sols.map((s,i)=>`<button class="sol" data-si="${i}" aria-pressed="${i===S.si}"><b>${t('Soluzione {n}',{n:i+1})}</b><span>${esc(solName(s))}</span><span class="hint">${t('Volume usato {n}%',{n:fmt(solFill(s)*100)})}${solCost(s)?' · '+t('costo {n}',{n:(+solCost(s).toFixed(2)).toLocaleString(LANG==='en'?'en-GB':'it-IT')}):''}</span>${s.method&&S.sols.some(x=>x.method&&x.method!==s.method)?`<span class="hint">${t(s.method==='cost'?'Metodo per costo':'Metodo normale')}${s.fit?'':' · '+t('non entra tutto')}</span>`:''}</button>`).join('')}</div>`;
 }
 $('#solBox').addEventListener('click',e=>{ const b=e.target.closest('[data-si]'); if(!b) return; setSols(S.sols,+b.dataset.si); save(); renderPlan(); });
 function renderContTabs(){
   const p=S.plan, el=$('#contTabs');
   el.classList.toggle('hidden',p.conts.length<2);
-  el.innerHTML=p.conts.map((k,i)=>`<button data-cc="${i}" aria-pressed="${i===S.cc}">${i+1}. ${esc(S.containers[k.ci].name)} (${k.boxes.length} colli)</button>`).join('');
+  el.innerHTML=p.conts.map((k,i)=>`<button data-cc="${i}" aria-pressed="${i===S.cc}">${i+1}. ${esc(S.containers[k.ci].name)} (${t('{n} colli',{n:k.boxes.length})})</button>`).join('');
   $('#bAddCont').disabled=p.conts.length>=MAX_CONT;
   $('#bDelCont').classList.toggle('hidden',p.conts.length<2);
 }
@@ -1106,29 +1313,29 @@ function renderPlan(){
   const len=k.boxes.reduce((m,b)=>Math.max(m,b.x+b.l),0);
   let cog=0; if(kg>0) cog=k.boxes.reduce((s,b)=>s+b.kg*(b.x+b.l/2),0)/kg;
   const nErr=AN.errs.size;
-  const head=multi?`Container ${S.cc+1} di ${p.conts.length}`:(p.fit&&!p.forced?'Container più piccolo che basta':'Container');
+  const head=multi?t('Container {n} di {m}',{n:S.cc+1,m:p.conts.length}):t(p.fit&&!p.forced?'Container più piccolo che basta':'Container');
   $('#summary').innerHTML=`
-    ${multi?`<p class="overall" style="flex-basis:100%">In totale: <b>${p.conts.length} container</b>, <b>${all.length} di ${tot}</b> colli caricati, <b>${fmt(boxKg(all))} kg</b>, volume usato <b>${fmt(solFill(p)*100)}%</b>.</p>`:''}
+    ${multi?`<p class="overall" style="flex-basis:100%">${t('In totale: <b>{n} container</b>, <b>{a} di {b}</b> colli caricati, <b>{kg} kg</b>, volume usato <b>{v}%</b>.',{n:p.conts.length,a:all.length,b:tot,kg:fmt(boxKg(all)),v:fmt(solFill(p)*100)})}</p>`:''}
     <div class="stat"><span class="k">${head}</span><h2 class="cont-name">${esc(c.name)}</h2></div>
-    ${multi?`<div class="stat"><span class="v">${k.boxes.length}</span><span class="k">colli in questo container</span></div>`
-           :`<div class="stat ${p.unplaced.length?'warn':''}"><span class="v">${k.boxes.length} di ${tot}</span><span class="k">colli caricati</span></div>`}
-    <div class="stat"><span class="v">${fmt(v/cvol(c)*100)}%</span><span class="k">volume usato</span></div>
-    <div class="stat ${kg>c.maxKg?'warn':''}"><span class="v">${fmt(kg)} kg</span><span class="k">su ${fmt(c.maxKg)} kg massimi</span></div>
-    <div class="stat"><span class="v">${fmt(len/100,2)} m</span><span class="k">usati su ${fmt(c.L/100,2)} m di lunghezza</span></div>
-    <div class="stat"><span class="v">${fmt(cog/100,2)} m</span><span class="k">baricentro dal fondo (metà: ${fmt(c.L/200,2)} m)</span></div>`;
+    ${multi?`<div class="stat"><span class="v">${k.boxes.length}</span><span class="k">${t('colli in questo container')}</span></div>`
+           :`<div class="stat ${p.unplaced.length?'warn':''}"><span class="v">${t('{a} di {b}',{a:k.boxes.length,b:tot})}</span><span class="k">${t('colli caricati')}</span></div>`}
+    <div class="stat"><span class="v">${fmt(v/cvol(c)*100)}%</span><span class="k">${t('volume usato')}</span></div>
+    <div class="stat ${kg>c.maxKg?'warn':''}"><span class="v">${fmt(kg)} kg</span><span class="k">${t('su {n} kg massimi',{n:fmt(c.maxKg)})}</span></div>
+    <div class="stat"><span class="v">${fmt(len/100,2)} m</span><span class="k">${t('usati su {n} m di lunghezza',{n:fmt(c.L/100,2)})}</span></div>
+    <div class="stat"><span class="v">${fmt(cog/100,2)} m</span><span class="k">${t('baricentro dal fondo (metà: {n} m)',{n:fmt(c.L/200,2)})}</span></div>`;
   const notes=[];
-  if(nErr) notes.push(`<li class="err">${nErr===1?'1 collo ha':nErr+' colli hanno'} un problema (bordo rosso). Clicca il collo per vedere quale.</li>`);
-  if(p.unplaced.length) notes.push(`<li class="err">${p.unplaced.length===1?'1 collo non entra':p.unplaced.length+' colli non entrano'}. ${p.fit?'':'Aggiungi un container o scegline uno più grande, poi premi "Ricalcola".'}</li>`);
-  if(kg>c.maxKg) notes.push(`<li class="err">Peso oltre il massimo del container.</li>`);
-  (p.notes||[]).forEach(n=>notes.push(`<li>${esc(n)}</li>`));
+  if(nErr) notes.push(`<li class="err">${t(nErr===1?'1 collo ha un problema (bordo rosso). Clicca il collo per vedere quale.':'{n} colli hanno un problema (bordo rosso). Clicca il collo per vedere quale.',{n:nErr})}</li>`);
+  if(p.unplaced.length) notes.push(`<li class="err">${t(p.unplaced.length===1?'1 collo non entra.':'{n} colli non entrano.',{n:p.unplaced.length})} ${p.fit?'':t('Aggiungi un container o scegline uno più grande, poi premi "Ricalcola".')}</li>`);
+  if(kg>c.maxKg) notes.push(`<li class="err">${t('Peso oltre il massimo del container.')}</li>`);
+  (p.notes||[]).forEach(n=>notes.push(`<li>${esc(trCore(n))}</li>`));
   $('#notes').innerHTML=notes.join('');
   // select container
   $('#contSel').innerHTML=S.containers.map((x,i)=>`<option value="${i}" ${i===k.ci?'selected':''}>${esc(x.name)}</option>`).join('');
   // livelli
   let maxLv=1; AN.level.forEach(v=>{ if(v>maxLv) maxLv=v; });
   if(S.level!=='all' && S.level>maxLv) S.level='all';
-  let seg=`<button data-l="all" aria-pressed="${S.level==='all'}">Tutti</button>`;
-  for(let i=1;i<=maxLv;i++) seg+=`<button data-l="${i}" aria-pressed="${S.level===i}">${i===1?'A terra':'Livello '+i}</button>`;
+  let seg=`<button data-l="all" aria-pressed="${S.level==='all'}">${t('Tutti')}</button>`;
+  for(let i=1;i<=maxLv;i++) seg+=`<button data-l="${i}" aria-pressed="${S.level===i}">${i===1?t('A terra'):t('Livello {n}',{n:i})}</button>`;
   $('#levelSeg').innerHTML=seg;
   $('#topWrap').innerHTML=topSVG(k,c,AN,{level:S.level,sel:S.sel,interactive:true});
   const svg=$('#topWrap svg'); svg.style.minWidth=Math.round((c.L+80)*0.72)+'px';
@@ -1138,14 +1345,14 @@ function renderPlan(){
 function boxLabel(b){ return b.code; }
 function topSVG(p,c,an,o){
   const L=c.L, W=c.W, m=40;
-  let s=`<svg class="plan" viewBox="${-m} ${-m-4} ${L+2*m} ${W+2*m+8}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista dall'alto del container">`;
+  let s=`<svg class="plan" viewBox="${-m} ${-m-4} ${L+2*m} ${W+2*m+8}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${t("Vista dall'alto del container")}">`;
   s+=`<defs><pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="12" fill="var(--red)" opacity=".35"/></pattern></defs>`;
   s+=`<rect class="wall" x="-7" y="-7" width="${L+7}" height="${W+14}"/><rect class="floor" x="0" y="0" width="${L}" height="${W}"/>`;
   for(let x=100;x<L;x+=100){ s+=`<line class="gridl" x1="${x}" y1="0" x2="${x}" y2="${W}"/>`; if(x%(L>800?200:100)===0) s+=`<text class="ruler" x="${x}" y="-14" text-anchor="middle">${x/100} m</text>`; }
   s+=`<line class="door" x1="${L+3}" y1="0" x2="${L+3}" y2="${W}"/>`;
-  s+=`<text class="side-label" transform="translate(${L+26},${W/2}) rotate(90)" text-anchor="middle">Porte</text>`;
-  s+=`<text class="side-label" transform="translate(-22,${W/2}) rotate(-90)" text-anchor="middle">Fondo</text>`;
-  s+=`<text class="ruler" x="0" y="${W+24}">Lato sinistro, visto dalle porte</text>`;
+  s+=`<text class="side-label" transform="translate(${L+26},${W/2}) rotate(90)" text-anchor="middle">${t('Porte')}</text>`;
+  s+=`<text class="side-label" transform="translate(-22,${W/2}) rotate(-90)" text-anchor="middle">${t('Fondo')}</text>`;
+  s+=`<text class="ruler" x="0" y="${W+24}">${t('Lato sinistro, visto dalle porte')}</text>`;
   const lvl=o.level;
   const list=p.boxes.slice().sort((a,b)=>a.z-b.z||a.x-b.x);
   for(const b of list){
@@ -1169,24 +1376,24 @@ function boxSVG(b,W,an,o){
   g+=`<text x="${b.l/2}" y="${b.w/2-(b.w>fs*2.6?fs*0.45:0)}" font-size="${fs}">${esc(txt)}</text>`;
   if(b.w>fs*2.6) g+=`<text x="${b.l/2}" y="${b.w/2+fs*0.65}" font-size="${fs*0.72}" opacity=".75">${b.l}×${b.w}×${b.h}</text>`;
   if(o.badge){ const r=Math.min(11,Math.min(b.l,b.w)/4); g+=`<g class="badge" pointer-events="none"><circle cx="${b.l-r-3}" cy="${r+3}" r="${r}"/><text x="${b.l-r-3}" y="${r+3}" font-size="${r*1.3}" text-anchor="middle" dominant-baseline="central">${o.badge}</text></g>`; }
-  g+=`<title>${esc(b.code)} n.${b.n} | ${b.l}×${b.w}×${b.h} cm | ${fmt(b.kg)} kg | livello ${an.level.get(b.uid)||1}</title></g>`;
+  g+=`<title>${esc(b.code)} n.${b.n} | ${b.l}×${b.w}×${b.h} cm | ${fmt(b.kg)} kg | ${t('livello {n}',{n:an.level.get(b.uid)||1})}</title></g>`;
   return g;
 }
 function sideSVG(p,c,an,sel){
   const L=c.L, H=c.H, m=40;
-  let s=`<svg class="plan" viewBox="${-m} ${-m} ${L+2*m} ${H+2*m}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista laterale">`;
+  let s=`<svg class="plan" viewBox="${-m} ${-m} ${L+2*m} ${H+2*m}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${t('Vista laterale')}">`;
   s+=`<rect class="wall" x="-7" y="-7" width="${L+7}" height="${H+14}"/><rect class="floor" x="0" y="0" width="${L}" height="${H}"/>`;
   for(let x=100;x<L;x+=100) s+=`<line class="gridl" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
   s+=`<line class="door" x1="${L+3}" y1="0" x2="${L+3}" y2="${H}"/>`;
-  s+=`<text class="side-label" transform="translate(${L+26},${H/2}) rotate(90)" text-anchor="middle">Porte</text>`;
-  s+=`<text class="side-label" transform="translate(-22,${H/2}) rotate(-90)" text-anchor="middle">Fondo</text>`;
+  s+=`<text class="side-label" transform="translate(${L+26},${H/2}) rotate(90)" text-anchor="middle">${t('Porte')}</text>`;
+  s+=`<text class="side-label" transform="translate(-22,${H/2}) rotate(-90)" text-anchor="middle">${t('Fondo')}</text>`;
   const list=p.boxes.slice().sort((a,b)=>(b.y+b.w)-(a.y+a.w));
   for(const b of list){
     const err=an.errs.has(b.uid);
     const fs=Math.max(9,Math.min(20,Math.min(b.l,b.h)/3.4,b.l*0.9/(b.code.length*0.56)));
     s+=`<g class="bx${sel===b.uid?' sel':''}${err?' err':''}" data-uid="${b.uid}" transform="translate(${b.x},${H-b.z-b.h})"><rect class="b" width="${b.l}" height="${b.h}" rx="2" fill="${colorOf(b.row)}"/><text x="${b.l/2}" y="${b.h/2}" font-size="${fs}">${esc(b.code.length>Math.floor(b.l*0.92/(fs*0.56))?b.code.slice(0,Math.max(1,Math.floor(b.l*0.92/(fs*0.56))-1))+'…':b.code)}</text><title>${esc(b.code)} n.${b.n}</title></g>`;
   }
-  s+=`<text class="ruler" x="0" y="${H+26}">Vista dal lato sinistro</text>`;
+  s+=`<text class="ruler" x="0" y="${H+26}">${t('Vista dal lato sinistro')}</text>`;
   return s+'</svg>';
 }
 function renderSecond(){
@@ -1204,20 +1411,20 @@ $('#levelSeg').addEventListener('click',e=>{ const b=e.target.closest('button');
 
 function renderInfo(){
   const el=$('#info'); const b=cur().boxes.find(x=>x.uid===S.sel);
-  if(!b){ el.innerHTML=`<h3>Nessun collo scelto</h3><p class="hint">Clicca un collo nel disegno per vedere i dati, ruotarlo o toglierlo. Con la tastiera: R ruota, frecce spostano di 1 cm (con Maiusc 10 cm), Canc toglie.</p>`; return; }
+  if(!b){ el.innerHTML=`<h3>${t('Nessun collo scelto')}</h3><p class="hint">${t('Clicca un collo nel disegno per vedere i dati, ruotarlo o toglierlo. Con la tastiera: R ruota, frecce spostano di 1 cm (con Maiusc 10 cm), Canc toglie.')}</p>`; return; }
   const e=AN.errs.get(b.uid)||[];
   el.innerHTML=`<h3><span class="swatch" style="background:${colorOf(b.row)}"></span>${esc(b.code)} <span class="hint">n.${b.n}</span></h3>
-    ${e.length?`<ul class="errs">${e.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+    ${e.length?`<ul class="errs">${e.map(x=>`<li>${esc(trCore(x))}</li>`).join('')}</ul>`:''}
     <dl>
-      <dt>Misure</dt><dd>${b.l} × ${b.w} cm, alto ${b.h} cm${b.rot?' (ruotato)':''}</dd>
-      <dt>Peso</dt><dd>${fmt(b.kg)} kg</dd>
-      <dt>Sovrapponibile</dt><dd>${b.stack?'sì':'no'}</dd>
-      <dt>Livello</dt><dd>${(AN.level.get(b.uid)||1)===1?'a terra':'livello '+AN.level.get(b.uid)+' (a '+fmt(b.z)+' cm da terra)'}</dd>
-      <dt>Dal fondo</dt><dd>${fmt(b.x/100,2)} m</dd>
-      <dt>Dal lato sinistro</dt><dd>${fmt(b.y)} cm</dd>
+      <dt>${t('Misure')}</dt><dd>${t('{l} × {w} cm, alto {h} cm',{l:b.l,w:b.w,h:b.h})}${b.rot?t(' (ruotato)'):''}</dd>
+      <dt>${t('Peso')}</dt><dd>${fmt(b.kg)} kg</dd>
+      <dt>${t('Sovrapponibile')}</dt><dd>${t(b.stack?'sì':'no')}</dd>
+      <dt>${t('Livello')}</dt><dd>${(AN.level.get(b.uid)||1)===1?t('a terra'):t('livello {n} (a {z} cm da terra)',{n:AN.level.get(b.uid),z:fmt(b.z)})}</dd>
+      <dt>${t('Dal fondo')}</dt><dd>${fmt(b.x/100,2)} m</dd>
+      <dt>${t('Dal lato sinistro')}</dt><dd>${fmt(b.y)} cm</dd>
     </dl>
-    <div class="row"><button class="btn" data-act="rot">Ruota</button><button class="btn" data-act="rem">Togli dal container</button></div>
-    ${S.plan.conts.length>1?`<div class="row" style="margin-top:8px">${S.plan.conts.map((k,i)=>i===S.cc?'':`<button class="btn" data-act="to" data-cc="${i}">Sposta nel container ${i+1}</button>`).join('')}</div>`:''}`;
+    <div class="row"><button class="btn" data-act="rot">${t('Ruota')}</button><button class="btn" data-act="rem">${t('Togli dal container')}</button></div>
+    ${S.plan.conts.length>1?`<div class="row" style="margin-top:8px">${S.plan.conts.map((k,i)=>i===S.cc?'':`<button class="btn" data-act="to" data-cc="${i}">${t('Sposta nel container {n}',{n:i+1})}</button>`).join('')}</div>`:''}`;
 }
 $('#info').addEventListener('click',e=>{
   const a=e.target.closest('[data-act]'); if(!a) return;
@@ -1225,14 +1432,14 @@ $('#info').addEventListener('click',e=>{
 });
 function renderOut(){
   const u=S.plan.unplaced;
-  if(!u.length){ $('#outList').innerHTML=`<p class="hint" style="margin:0">Tutti i colli sono ${S.plan.conts.length>1?'nei container':'nel container'}.</p>`; return; }
-  $('#outList').innerHTML=`<p class="hint" style="margin:0">Clicca un collo per metterlo nel primo posto libero${S.plan.conts.length>1?' del container '+(S.cc+1):''}.</p><div class="chips">${u.map(x=>`<button class="chip" data-uid="${x.uid}" title="${x.l}×${x.w}×${x.h} cm, ${fmt(x.kg)} kg"><span class="swatch" style="background:${colorOf(x.row)}"></span>${esc(x.code)} n.${x.n}</button>`).join('')}</div>`;
+  if(!u.length){ $('#outList').innerHTML=`<p class="hint" style="margin:0">${t(S.plan.conts.length>1?'Tutti i colli sono nei container.':'Tutti i colli sono nel container.')}</p>`; return; }
+  $('#outList').innerHTML=`<p class="hint" style="margin:0">${t(S.plan.conts.length>1?'Clicca un collo per metterlo nel primo posto libero del container {n}.':'Clicca un collo per metterlo nel primo posto libero.',{n:S.cc+1})}</p><div class="chips">${u.map(x=>`<button class="chip" data-uid="${x.uid}" title="${x.l}×${x.w}×${x.h} cm, ${fmt(x.kg)} kg"><span class="swatch" style="background:${colorOf(x.row)}"></span>${esc(x.code)} n.${x.n}</button>`).join('')}</div>`;
 }
 $('#outList').addEventListener('click',e=>{
   const ch=e.target.closest('.chip'); if(!ch) return;
   const i=S.plan.unplaced.findIndex(x=>x.uid===ch.dataset.uid); const u=S.plan.unplaced[i];
   const p=findPosition(cur().boxes,u,cont(),S.opts);
-  if(!p){ toast('Non c\'è un posto libero per questo collo. Prova a spostare altri colli o a cambiare container.',5000); return; }
+  if(!p){ toast(t("Non c'è un posto libero per questo collo. Prova a spostare altri colli o a cambiare container."),5000); return; }
   S.plan.unplaced.splice(i,1); cur().boxes.push(toBox(u,p)); S.sel=u.uid; changed();
 });
 function select(uid){ S.sel=uid; renderPlan(); }
@@ -1255,28 +1462,28 @@ function removeSel(){
 function moveSelTo(i){
   const b=cur().boxes.find(x=>x.uid===S.sel), k=S.plan.conts[i]; if(!b||!k) return;
   const p=findPosition(k.boxes,toUnit(b),S.containers[k.ci],S.opts);
-  if(!p){ toast('Nel container '+(i+1)+' non c\'è un posto libero per questo collo.',4500); return; }
+  if(!p){ toast(t("Nel container {n} non c'è un posto libero per questo collo.",{n:i+1}),4500); return; }
   const u=takeSel(); k.boxes.push(toBox(u,p));
   S.cc=i; S.sel=u.uid; S.level='all'; changed();
 }
 $('#bRot').onclick=rotateSel; $('#bRem').onclick=removeSel;
-$('#contSel').onchange=e=>{ cur().ci=+e.target.value; S.plan.forced=true; S.plan.notes=[]; changed(); toast('Container cambiato. Premi "Ricalcola" per una nuova disposizione automatica.',4500); };
+$('#contSel').onchange=e=>{ cur().ci=+e.target.value; S.plan.forced=true; S.plan.notes=[]; changed(); toast(t('Container cambiato. Premi "Ricalcola" per una nuova disposizione automatica.'),4500); };
 $('#bAddCont').onclick=()=>{
   if(S.plan.conts.length>=MAX_CONT) return;
   S.plan.conts.push({ci:cur().ci,boxes:[]}); S.plan.forced=true;
   S.cc=S.plan.conts.length-1; S.sel=null; S.level='all'; changed();
-  toast('Container aggiunto. Clicca i colli fuori per caricarli, oppure premi "Ricalcola".',5000);
+  toast(t('Container aggiunto. Clicca i colli fuori per caricarli, oppure premi "Ricalcola".'),5000);
 };
 let delArm=0;
 $('#bDelCont').onclick=()=>{
   const b=$('#bDelCont');
-  if(Date.now()-delArm>=3500){ delArm=Date.now(); b.textContent='Sicuro? Clicca ancora'; setTimeout(()=>{ if(Date.now()-delArm>=3400) b.textContent='Togli questo container'; },3500); return; }
-  delArm=0; b.textContent='Togli questo container';
+  if(Date.now()-delArm>=3500){ delArm=Date.now(); b.textContent=t('Sicuro? Clicca ancora'); setTimeout(()=>{ if(Date.now()-delArm>=3400) b.textContent=t('Togli questo container'); },3500); return; }
+  delArm=0; b.textContent=t('Togli questo container');
   if(S.plan.conts.length<2) return;
   const k=S.plan.conts.splice(S.cc,1)[0];
   S.plan.unplaced.push(...k.boxes.map(toUnit)); S.plan.unplaced.sort(tie); S.plan.forced=true;
   S.cc=Math.max(0,S.cc-1); S.sel=null; S.level='all'; changed();
-  toast(k.boxes.length?'Container tolto. I suoi colli sono nella lista dei colli fuori.':'Container tolto.',4500);
+  toast(t(k.boxes.length?'Container tolto. I suoi colli sono nella lista dei colli fuori.':'Container tolto.'),4500);
 };
 document.addEventListener('keydown',e=>{
   if(S.step!==2 || !S.sel) return;
@@ -1410,40 +1617,43 @@ if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEvent
 
 // ---------- Excel: esporta e reimporta ----------
 async function exportXlsx(){
-  if(!window.XLSX){ toast('Excel non disponibile in questo momento.'); return; }
+  if(!window.XLSX){ toast(t('Excel non disponibile in questo momento.')); return; }
   const p=S.plan, multi=p.conts.length>1, all=allBoxes(p);
-  const wb=XLSX.utils.book_new();
-  const colli=[['Codice','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso (kg)','Quantità','Sovrapponibile']].concat(S.rows.map(r=>[r.code,r.l,r.w,r.h,r.kg,r.qty,r.stack?'sì':'no']));
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(colli),'Colli');
+  const wb=XLSX.utils.book_new(), yn=v=>t(v?'sì':'no'), ta=a=>a.map(x=>t(x));
+  // in inglese i fogli si chiamano Packages / Plan / Summary: sheetOf() li riconosce in tutte e due le lingue
+  const colli=[ta(['Codice','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso (kg)','Quantità','Sovrapponibile'])].concat(S.rows.map(r=>[r.code,r.l,r.w,r.h,r.kg,r.qty,yn(r.stack)]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(colli),t('Colli'));
   // la colonna "Container" è in fondo: i file vecchi (senza) valgono come container 1
-  const piano=[['Codice','N.','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso (kg)','Dal fondo (cm)','Dal lato sinistro (cm)','Da terra (cm)','Livello','Ruotato','Container']];
+  const piano=[ta(['Codice','N.','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso (kg)','Dal fondo (cm)','Dal lato sinistro (cm)','Da terra (cm)','Livello','Ruotato','Container'])];
   p.conts.forEach((k,i)=>{
     const an=analyze(k.boxes,S.containers[k.ci],S.opts);
-    piano.push(...k.boxes.slice().sort((a,b)=>a.x-b.x||a.z-b.z||a.y-b.y).map(b=>[b.code,b.n,b.l,b.w,b.h,b.kg,b.x,b.y,b.z,an.level.get(b.uid)||1,b.rot?'sì':'no',i+1]));
+    piano.push(...k.boxes.slice().sort((a,b)=>a.x-b.x||a.z-b.z||a.y-b.y).map(b=>[b.code,b.n,b.l,b.w,b.h,b.kg,b.x,b.y,b.z,an.level.get(b.uid)||1,yn(b.rot),i+1]));
   });
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(piano),'Piano');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(piano),t('Piano'));
   let rie;
   if(!multi){
     const c=cont();
-    rie=[['Container',c.name],['Misure interne (cm)',`${c.L} x ${c.W} x ${c.H}`],['Colli caricati',all.length],['Colli fuori',p.unplaced.length],['Peso caricato (kg)',boxKg(all)],['Peso massimo (kg)',c.maxKg]];
+    rie=[['Container',c.name],[t('Misure interne (cm)'),`${c.L} x ${c.W} x ${c.H}`],[t('Colli caricati'),all.length],[t('Colli fuori'),p.unplaced.length],[t('Peso caricato (kg)'),boxKg(all)],[t('Peso massimo (kg)'),c.maxKg]];
   } else {
     rie=p.conts.map((k,i)=>[i?'Container '+(i+1):'Container',S.containers[k.ci].name]);
-    rie.push(['Colli caricati',all.length],['Colli fuori',p.unplaced.length],['Peso caricato (kg)',boxKg(all)],[],
-      ['N. container','Tipo','Misure interne (cm)','Colli','Peso (kg)','Peso massimo (kg)','Volume usato (%)']);
+    rie.push([t('Colli caricati'),all.length],[t('Colli fuori'),p.unplaced.length],[t('Peso caricato (kg)'),boxKg(all)],[],
+      ta(['N. container','Tipo','Misure interne (cm)','Colli','Peso (kg)','Peso massimo (kg)','Volume usato (%)']));
     p.conts.forEach((k,i)=>{ const c=S.containers[k.ci];
       rie.push([i+1,c.name,`${c.L} x ${c.W} x ${c.H}`,k.boxes.length,boxKg(k.boxes),c.maxKg,Math.round(boxVol(k.boxes)/cvol(c)*100)]); });
   }
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rie),'Riepilogo');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rie),t('Riepilogo'));
   const fname=multi?p.conts.length+'-container':cont().name.replace(/[^\w]+/g,'-').replace(/-+$/,'');
-  await saveXlsx(wb,'piano-di-carico-'+fname+'.xlsx');
+  await saveXlsx(wb,t('piano-di-carico-')+fname+'.xlsx');
 }
+// foglio con il nome italiano o inglese (Colli/Packages, Piano/Plan, Riepilogo/Summary)
+function sheetOf(wb,it){ return wb.Sheets[it]||wb.Sheets[EN[it]]; }
 async function saveXlsx(wb,name){
   const data=XLSX.write(wb,{type:'array',bookType:'xlsx'});
   let dl=null;
   try{ if(window.claude && window.claude.use) dl=await window.claude.use('downloads'); }catch(_){}
   if(dl){
-    try{ await dl.save({filename:name,data:new Blob([data])}); toast('File salvato'); }
-    catch(err){ if(err && err.code!=='declined') toast('Non riesco a salvare il file qui.'); }
+    try{ await dl.save({filename:name,data:new Blob([data])}); toast(t('File salvato')); }
+    catch(err){ if(err && err.code!=='declined') toast(t('Non riesco a salvare il file qui.')); }
     return;
   }
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=name;
@@ -1452,79 +1662,86 @@ async function saveXlsx(wb,name){
 $('#bXlsx').onclick=exportXlsx;
 // modello Excel vuoto da compilare
 $('#bTpl').onclick=async()=>{
-  if(!window.XLSX){ toast('Excel non disponibile in questo momento. Riprova tra poco.'); return; }
+  if(!window.XLSX){ toast(t('Excel non disponibile in questo momento. Riprova tra poco.')); return; }
   const wb=XLSX.utils.book_new();
-  const head=['Codice / descrizione','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso 1 collo (kg)','Quantità','Sovrapponibile (sì/no)'];
+  const head=['Codice / descrizione','Lunghezza (cm)','Larghezza (cm)','Altezza (cm)','Peso 1 collo (kg)','Quantità','Sovrapponibile (sì/no)'].map(x=>t(x));
   const ws=XLSX.utils.aoa_to_sheet([head]);
   ws['!cols']=[{wch:28},{wch:15},{wch:15},{wch:14},{wch:18},{wch:10},{wch:22}];
-  XLSX.utils.book_append_sheet(wb,ws,'Colli');
+  XLSX.utils.book_append_sheet(wb,ws,t('Colli'));
   const ist=[
-    ['Come compilare il foglio "Colli"'],
+    [t('Come compilare il foglio "Colli"')],
     [''],
-    ['1. Scrivi una riga per ogni tipo di collo. Non cambiare la prima riga con i titoli.'],
-    ['2. Misure in centimetri, peso in kg di UN collo.'],
-    ['3. Quantità = quanti colli uguali ci sono. Se lasci vuoto vale 1.'],
-    ['4. Sovrapponibile: scrivi "sì" se si può mettere un altro collo sopra, "no" se non si può. Se lasci vuoto vale "sì".'],
-    ['5. Salva il file e caricalo nel programma con il tasto "Carica file Excel".'],
+    [t('1. Scrivi una riga per ogni tipo di collo. Non cambiare la prima riga con i titoli.')],
+    [t('2. Misure in centimetri, peso in kg di UN collo.')],
+    [t('3. Quantità = quanti colli uguali ci sono. Se lasci vuoto vale 1.')],
+    [t('4. Sovrapponibile: scrivi "sì" se si può mettere un altro collo sopra, "no" se non si può. Se lasci vuoto vale "sì".')],
+    [t('5. Salva il file e caricalo nel programma con il tasto "Carica file Excel".')],
     [''],
-    ['Esempio:'],
+    [t('Esempio:')],
     head,
-    ['PAL-A',120,80,110,450,8,'sì'],
-    ['MACCHINA',240,150,180,1500,1,'no']
+    ['PAL-A',120,80,110,450,8,t('sì')],
+    ['MACCHINA',240,150,180,1500,1,t('no')]
   ];
   const wi=XLSX.utils.aoa_to_sheet(ist);
   wi['!cols']=[{wch:28},{wch:15},{wch:15},{wch:14},{wch:18},{wch:10},{wch:22}];
-  XLSX.utils.book_append_sheet(wb,wi,'Istruzioni');
-  await saveXlsx(wb,'modello-colli.xlsx');
+  XLSX.utils.book_append_sheet(wb,wi,t('Istruzioni'));
+  await saveXlsx(wb,t('modello-colli.xlsx'));
 };
 function restorePlanFromSheet(wb){
   try{
     // righe "Container", "Container 2", ... del foglio Riepilogo
-    const rie=XLSX.utils.sheet_to_json(wb.Sheets['Riepilogo']||{},{header:1});
+    const rie=XLSX.utils.sheet_to_json(sheetOf(wb,'Riepilogo')||{},{header:1});
     const conts=[];
     for(const r of rie){
       const m=String((r||[])[0]??'').trim().match(/^Container(?: (\d+))?$/); if(!m) continue;
       let ci=S.containers.findIndex(c=>c.name===r[1]); if(ci<0) ci=S.containers.length-1;
       conts[(m[1]?+m[1]:1)-1]={ci,boxes:[]};
     }
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets['Piano'],{header:1}).slice(1);
+    const rows=XLSX.utils.sheet_to_json(sheetOf(wb,'Piano'),{header:1}).slice(1);
     const units=expandRows(S.rows); let n=0;
     for(const r of rows){
       const code=String(r[0]??'').trim(), nn=+r[1];
       const i=units.findIndex(u=>u.code===code && u.n===nn); if(i<0) continue;
       const k=Math.max(1,Math.min(MAX_CONT,Math.round(+r[11])||1))-1;
       if(!conts[k]) conts[k]={ci:S.containers.length-1,boxes:[]};
-      const u=units.splice(i,1)[0]; const rot=String(r[10]).toLowerCase().startsWith('s');
+      const u=units.splice(i,1)[0]; const rot=/^[sy]/.test(String(r[10]).toLowerCase());
       conts[k].boxes.push(toBox(u,{x:+r[6]||0,y:+r[7]||0,z:+r[8]||0,l:rot?u.w:u.l,w:rot?u.l:u.w,rot})); n++;
     }
     if(!n) return;
     setSols([{conts:conts.filter(Boolean),unplaced:units,notes:['Piano caricato dal file Excel.'],fit:true,forced:true}],0);
     S.planRowsKey=rowsKey(); save(); goStep(2);
-    toast('Ho caricato anche il piano salvato nel file.',4500);
+    toast(t('Ho caricato anche il piano salvato nel file.'),4500);
   }catch(e){}
 }
 
 // ---------- stampa ----------
 $('#bPrint').onclick=()=>{
   const p=S.plan, multi=p.conts.length>1, all=allBoxes(p);
-  let h=`<h1>Piano di carico: ${esc(multi?solName(p):cont().name)}</h1><p>Colli caricati: ${all.length} di ${all.length+p.unplaced.length}. Peso: ${fmt(boxKg(all))} kg. Porte a destra nei disegni.</p>`;
+  let h=`<h1>${t('Piano di carico: {n}',{n:esc(multi?solName(p):cont().name)})}</h1><p>${t('Colli caricati: {a} di {b}. Peso: {kg} kg. Porte a destra nei disegni.',{a:all.length,b:all.length+p.unplaced.length,kg:fmt(boxKg(all))})}</p>`;
   p.conts.forEach((k,ki)=>{
-    const c=S.containers[k.ci], an=analyze(k.boxes,c,S.opts), t=multi?`Container ${ki+1} (${esc(c.name)}): `:'';
+    const c=S.containers[k.ci], an=analyze(k.boxes,c,S.opts), pre=multi?t('Container {n} ({c}): ',{n:ki+1,c:esc(c.name)}):'';
     let maxLv=1; an.level.forEach(v=>{ if(v>maxLv) maxLv=v; });
-    if(multi) h+=`<h1 style="page-break-before:${ki?'always':'auto'}">Container ${ki+1}: ${esc(c.name)}</h1><p>Colli: ${k.boxes.length}. Peso: ${fmt(boxKg(k.boxes))} kg.</p>`;
-    h+=`<div class="pv"><h2>${t}vista dall'alto, tutti i livelli</h2>${topSVG(k,c,an,{level:'all',sel:null})}</div>`;
-    for(let i=1;i<=maxLv && maxLv>1;i++) h+=`<div class="pv"><h2>${t}${i===1?'a terra':'livello '+i}</h2>${topSVG(k,c,an,{level:i,sel:null})}</div>`;
-    h+=`<div class="pv"><h2>${t}vista laterale</h2>${sideSVG(k,c,an,null)}</div>`;
-    h+=`<h2>${t}ordine di carico (dal fondo alle porte)</h2><table><tr><th>Codice</th><th>N.</th><th>Misure cm</th><th>Peso kg</th><th>Dal fondo</th><th>Livello</th></tr>`;
+    if(multi) h+=`<h1 style="page-break-before:${ki?'always':'auto'}">${t('Container {n}: {c}',{n:ki+1,c:esc(c.name)})}</h1><p>${t('Colli: {n}. Peso: {kg} kg.',{n:k.boxes.length,kg:fmt(boxKg(k.boxes))})}</p>`;
+    h+=`<div class="pv"><h2>${pre}${t("vista dall'alto, tutti i livelli")}</h2>${topSVG(k,c,an,{level:'all',sel:null})}</div>`;
+    for(let i=1;i<=maxLv && maxLv>1;i++) h+=`<div class="pv"><h2>${pre}${i===1?t('a terra'):t('livello {n}',{n:i})}</h2>${topSVG(k,c,an,{level:i,sel:null})}</div>`;
+    h+=`<div class="pv"><h2>${pre}${t('vista laterale')}</h2>${sideSVG(k,c,an,null)}</div>`;
+    h+=`<h2>${pre}${t('ordine di carico (dal fondo alle porte)')}</h2><table><tr><th>${t('Codice')}</th><th>${t('N.')}</th><th>${t('Misure cm')}</th><th>${t('Peso kg')}</th><th>${t('Dal fondo')}</th><th>${t('Livello')}</th></tr>`;
     h+=k.boxes.slice().sort((a,b)=>a.x-b.x||a.z-b.z||a.y-b.y).map(b=>`<tr><td>${esc(b.code)}</td><td>${b.n}</td><td>${b.l}×${b.w}×${b.h}</td><td>${fmt(b.kg)}</td><td>${fmt(b.x/100,2)} m</td><td>${an.level.get(b.uid)||1}</td></tr>`).join('')+'</table>';
   });
-  if(p.unplaced.length) h+=`<h2>Colli fuori dal container</h2><p>${p.unplaced.map(u=>esc(u.code)+' n.'+u.n).join(', ')}</p>`;
+  if(p.unplaced.length) h+=`<h2>${t('Colli fuori dal container')}</h2><p>${p.unplaced.map(u=>esc(u.code)+' n.'+u.n).join(', ')}</p>`;
   $('#printArea').innerHTML=h;
-  try{ window.print(); }catch(e){ toast('La stampa non è disponibile qui. Usa "Scarica Excel".'); }
+  try{ window.print(); }catch(e){ toast(t('La stampa non è disponibile qui. Usa "Scarica Excel".')); }
 };
 
 // ---------- avvio ----------
 if(!load()) S.rows=JSON.parse(JSON.stringify(SAMPLE));
+$('#langSeg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-lang]'); if(!b || b.dataset.lang===LANG) return;
+  LANG=b.dataset.lang; try{ localStorage.setItem(LANG_KEY,LANG); }catch(_){}
+  applyLang(); renderTable(); renderSettings();
+  if(S.step===2) renderPlan();
+});
+applyLang();
 renderTable(); renderSettings();
 $('#tab2').disabled=!S.plan;
 updateStale();
