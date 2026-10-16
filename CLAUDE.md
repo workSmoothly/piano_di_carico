@@ -1,6 +1,6 @@
 # Piano di carico container
 
-Strumento web per preparare i piani di carico dei container. L'utente inserisce i colli (misure, peso, quantità, sovrapponibile sì/no). Il tool sceglie il container più piccolo che basta; se uno non basta, divide il carico sul minor numero di container (massimo 5) e propone fino a 3 soluzioni con riempimento simile. Calcola una disposizione e la mostra in modo grafico. L'utente può poi modificare la disposizione a mano.
+Strumento web per preparare i piani di carico dei container. L'utente inserisce i colli (misure, peso, quantità, regge colli sopra sì/no, può stare sopra sì/no). Il tool sceglie il container più piccolo che basta; se uno non basta, divide il carico sul minor numero di container (massimo 5) e propone fino a 3 soluzioni con riempimento simile. Calcola una disposizione e la mostra in modo grafico. L'utente può poi modificare la disposizione a mano.
 
 ## Chi lo usa
 
@@ -22,7 +22,10 @@ Strumento web per preparare i piani di carico dei container. L'utente inserisce 
 ## Regole di carico (dal cliente)
 
 1. **Rotazione:** i colli possono ruotare solo sul piano (si scambiano lunghezza e larghezza). **Non si ribaltano mai**: l'altezza resta sempre la stessa.
-2. **Sovrapponibile:** un collo "sovrapponibile" può avere altri colli sopra. Un collo "non sovrapponibile" può stare sopra altri colli, ma niente sopra di lui.
+2. **Colli sopra e sotto:** ogni collo ha due scelte indipendenti.
+   - **"Regge colli sopra"** (campo `stack`, prima si chiamava "Sovrapponibile"): se è no, niente sopra di lui.
+   - **"Può stare sopra"** (campo `top`, nuovo dalla 1.5.0): se è no, il collo va sempre a terra (`floorOnly`). I dati e i file vecchi senza `top` valgono come sì.
+   Il calcolo carica prima i colli solo a terra, poi quelli che reggono altri colli (`prio`), e scarta le combinazioni di container con pavimento troppo piccolo per i colli solo a terra.
 3. **Appoggio su due colli:** un collo può appoggiare su **massimo 2 colli** se la loro altezza **differisce meno di 5 cm**. Entrambi i valori sono modificabili in "Container e regole": `tol` (5 di default) e `maxSup` (2 di default, da 1 a 4).
 4. **Appoggio minimo:** la base deve essere appoggiata almeno per `minSup`% (80% di default, modificabile). Il calcolo automatico prima prova con appoggio quasi pieno (98%) per avere piani ordinati. Solo se non basta usa `minSup`.
 5. **Limiti del container:** si controllano il peso massimo, l'altezza interna e le misure della porta (larghezza e altezza). Il calcolo automatico non supera mai il peso massimo: i colli in più passano al container successivo.
@@ -69,7 +72,8 @@ La logica di calcolo è tra i commenti `CORE-START` e `CORE-END`. È fatta di fu
 - **`parseTable(matrix)`:** legge le tabelle incollate o i file Excel.
   - Riconosce i titoli delle colonne in italiano e inglese, i numeri con la virgola e le misure scritte come `120x80x100`.
   - Converte da metri o millimetri a cm.
-  - Senza riga dei titoli, l'ordine delle colonne è: codice, L, W, H, peso, quantità, sovrapponibile. Se la prima cella è un numero, il codice manca e l'ordine diventa: L, W, H, peso, quantità, sovrapponibile.
+  - Senza riga dei titoli, l'ordine delle colonne è: codice, L, W, H, peso, quantità, regge colli sopra, può stare sopra. Se la prima cella è un numero, il codice manca e l'ordine diventa: L, W, H, peso, quantità, regge colli sopra, può stare sopra.
+  - I titoli "Sovrapponibile" / "Stackable" (file vecchi) valgono come "Regge colli sopra". La colonna "Può stare sopra" / "Can go on top" si riconosce da "stare sopra", "sopra altri", "on top".
 
 ### Interfaccia
 
@@ -112,6 +116,6 @@ La logica di calcolo è tra i commenti `CORE-START` e `CORE-END`. È fatta di fu
 - **File unico:** niente nuove dipendenze se non servono. Se servono, usa un CDN (cdnjs o jsdelivr) con versione fissa.
 - **Comportamento:** non cambiare il sistema di coordinate o il formato dei fogli Excel senza mantenere la compatibilità con i file già salvati.
 - **Test:** dopo ogni modifica alla logica, rifai i test con Node descritti sopra.
-- **Versione:** la costante `APP_VERSION` (nel blocco interfaccia di `index.html`) si vede nel piè di pagina. Aggiornala a ogni rilascio: terzo numero per correzioni, secondo per nuove funzioni, primo per cambi che rompono la compatibilità (file Excel o dati salvati). 1.0.0 = container singolo, 1.1.0 = più container e soluzioni alternative, 1.2.0 = container preferiti e ricerca migliore, 1.3.0 = metodo per costo e confronto, 1.4.0 = lingua inglese.
+- **Versione:** la costante `APP_VERSION` (nel blocco interfaccia di `index.html`) si vede nel piè di pagina. Aggiornala a ogni rilascio: terzo numero per correzioni, secondo per nuove funzioni, primo per cambi che rompono la compatibilità (file Excel o dati salvati). 1.0.0 = container singolo, 1.1.0 = più container e soluzioni alternative, 1.2.0 = container preferiti e ricerca migliore, 1.3.0 = metodo per costo e confronto, 1.4.0 = lingua inglese, 1.5.0 = "Può stare sopra" separato da "Regge colli sopra".
 - **Esempio:** "Carica esempio" usa `SAMPLE`, pensato per dare 2 container nella soluzione migliore e un'alternativa con 3. Se cambi l'algoritmo, controlla che lo mostri ancora.
 - **Commit:** non inserire mai la riga `Co-Authored-By` (né altre righe di attribuzione) nei messaggi di commit. Il messaggio deve avere al massimo 3 righe.

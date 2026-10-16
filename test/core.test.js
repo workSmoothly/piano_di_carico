@@ -164,7 +164,7 @@ function time(fn) { const t = Date.now(); const r = fn(); return [r, Date.now() 
     { code: 'PAL-B', l: 120, w: 100, h: 105, kg: 600, qty: 10, stack: true },
     { code: 'CASSA 1', l: 200, w: 110, h: 90, kg: 380, qty: 8, stack: true },
     { code: 'CASSA 2', l: 150, w: 90, h: 60, kg: 120, qty: 10, stack: false },
-    { code: 'MACCHINA', l: 240, w: 150, h: 180, kg: 1500, qty: 3, stack: false }]);
+    { code: 'MACCHINA', l: 240, w: 150, h: 180, kg: 1500, qty: 3, stack: false, top: false }]);
   const [sols, ms] = time(() => C.autoPlan(u, cs, o));
   const s = sols[0];
   console.log('     soluzioni: ' + sols.map(x => names(x, cs)).join(' | ') + '  (' + ms + ' ms)');
@@ -186,6 +186,32 @@ function time(fn) { const t = Date.now(); const r = fn(); return [r, Date.now() 
   check('costo: 40 europallet -> costo al massimo 3,6 (2 x 40\')', cost <= 3.6 + 1e-9, names(s2, cs) + ' costo ' + cost);
   const tall = C.autoPlanCost(units([{ code: 'ALTA', l: 120, w: 100, h: 250, kg: 500, qty: 4, stack: false }]), cs, o)[0];
   check('costo: colli alti 250 -> 40\' High Cube', tall.fit && names(tall, cs) === "40' High Cube", names(tall, cs));
+}
+
+// 14. "Può stare sopra" = no: il collo va sempre a terra
+{
+  const cs = conts(), o = opts();
+  const u = units([
+    { code: 'BASSA', l: 120, w: 80, h: 60, kg: 200, qty: 10, stack: true, top: false },
+    { code: 'ALTRA', l: 120, w: 80, h: 60, kg: 200, qty: 10, stack: true }]);
+  const s = C.autoPlan(u, cs, o)[0];
+  const all = s.conts.flatMap(k => k.boxes);
+  check('top=false: tutto dentro, senza errori', s.fit && placed(s) === 20 && noErrors(s, cs, o), names(s, cs));
+  check('top=false: nessun collo "solo a terra" sopra altri', all.filter(b => b.code === 'BASSA').every(b => b.z === 0));
+  check('top=false: gli altri colli possono stare sopra', all.some(b => b.code === 'ALTRA' && b.z > 0));
+  const c = cs[0];
+  const boxes = [{ uid: 'a', x: 0, y: 0, z: 0, l: 120, w: 80, h: 60, stack: true, top: true },
+                 { uid: 'b', x: 0, y: 0, z: 60, l: 120, w: 80, h: 60, stack: true, top: false }];
+  check('top=false: analyze segnala il collo messo sopra', (C.analyze(boxes, c, o).errs.get('b') || []).includes('Non può stare sopra altri colli'));
+  // 30 colli solo a terra 200x110 (66 m²): il pavimento di un 45' (circa 32 m²) non basta, servono più container
+  const big = C.autoPlan(units([{ code: 'Q', l: 200, w: 110, h: 50, kg: 50, qty: 30, stack: true, top: false }]), cs, o)[0];
+  check('top=false: troppo pavimento -> più container, tutto a terra', big.fit && big.conts.length > 1 && big.conts.every(k => k.boxes.every(b => b.z === 0)), names(big, cs));
+  const p1 = C.parseTable([['Codice', 'L', 'W', 'H', 'Peso', 'Quantità', 'Regge colli sopra', 'Può stare sopra'], ['A', 100, 80, 50, 10, 1, 'sì', 'no']]);
+  check('parseTable: colonne "Regge colli sopra" e "Può stare sopra"', p1.rows[0].stack === true && p1.rows[0].top === false);
+  const p2 = C.parseTable([['Code', 'Length', 'Width', 'Height', 'Weight', 'Quantity', 'Can hold others', 'Can go on top'], ['A', 100, 80, 50, 10, 1, 'no', 'no']]);
+  check('parseTable: colonne in inglese', p2.rows[0].stack === false && p2.rows[0].top === false);
+  const p3 = C.parseTable([['A', 100, 80, 50, 10, 1, 'no']]);
+  check('parseTable: senza colonna "Può stare sopra" vale sì', p3.rows[0].stack === false && p3.rows[0].top === true);
 }
 
 console.log('\n' + pass + ' ok, ' + fail + ' falliti');
