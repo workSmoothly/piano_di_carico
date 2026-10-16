@@ -66,6 +66,8 @@ main{max-width:1280px;margin:0 auto;padding:20px}
 .foot h2{font-size:18px;margin:0 0 6px;color:var(--ink)}
 .foot p{margin:0 0 8px;max-width:75ch}
 .foot a{color:inherit}
+.foot a.btn{color:var(--steel-ink);text-decoration:none;display:inline-block}
+.foot .donate{margin:0 0 20px}
 
 /* table */
 .tbl-wrap{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:8px}
@@ -317,6 +319,14 @@ svg.plan text{font-family:"Bahnschrift","Roboto Condensed","Arial Narrow",sans-s
 </main>
 
 <footer class="foot">
+  <div class="donate">
+    <h2>Ti è stato utile?</h2>
+    <p>Questo programma è gratuito. Se ti è stato d'aiuto, puoi offrirmi un caffè.</p>
+    <div class="row">
+      <a class="btn primary" href="https://paypal.me/pianodicarico" target="_blank" rel="noopener">☕ Offrimi un caffè</a>
+      <span class="hint">La donazione è libera e non serve per usare il programma. Il pagamento avviene sul sito di PayPal.</span>
+    </div>
+  </div>
   <h2>I tuoi dati</h2>
   <p>I dati che inserisci restano solo su questo computer, nel browser. Il programma non li invia a nessun server e non usa cookie. Nessuno, oltre a te, può vederli.</p>
   <p>La pagina è pubblicata su GitHub Pages e scarica due librerie da cdnjs (Cloudflare). Come ogni sito, questi servizi ricevono i dati tecnici della connessione, come l'indirizzo IP. Non ricevono i dati dei colli. Per sapere come li usano, leggi la <a href="https://docs.github.com/it/site-policy/privacy-policies/github-general-privacy-statement" data-href-en="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">privacy di GitHub</a> e la <a href="https://www.cloudflare.com/it-it/privacypolicy/" data-href-en="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">privacy di Cloudflare</a>.</p>
@@ -863,7 +873,7 @@ const PALETTE=['#D2AE74','#93BBA6','#93AED3','#CC98AA','#DDBB5E','#7FBDBD','#BBA
 const colorOf=row=>PALETTE[row%PALETTE.length];
 const fmt=(n,d=0)=>Number(n).toLocaleString(LANG==='en'?'en-GB':'it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.6.0';
 
 // ---------- lingua ----------
 // I testi nel codice sono in italiano: t() li traduce in inglese con il dizionario EN.
@@ -914,6 +924,10 @@ const EN={
   'Vista 3D':'3D view','Vista laterale':'Side view',
   'Trascina per girare, rotella per zoom':'Drag to turn, mouse wheel to zoom',
   'Colli fuori dal container':'Packages outside the container',
+  'Ti è stato utile?':'Was it useful?',
+  'Questo programma è gratuito. Se ti è stato d\'aiuto, puoi offrirmi un caffè.':'This program is free. If it helped you, you can buy me a coffee.',
+  '☕ Offrimi un caffè':'☕ Buy me a coffee',
+  'La donazione è libera e non serve per usare il programma. Il pagamento avviene sul sito di PayPal.':'Donations are optional and not needed to use the program. The payment is made on the PayPal website.',
   'I tuoi dati':'Your data',
   'I dati che inserisci restano solo su questo computer, nel browser. Il programma non li invia a nessun server e non usa cookie. Nessuno, oltre a te, può vederli.':'The data you enter stays only on this computer, in the browser. The program does not send it to any server and does not use cookies. Nobody but you can see it.',
   'La pagina è pubblicata su GitHub Pages e scarica due librerie da cdnjs (Cloudflare). Come ogni sito, questi servizi ricevono i dati tecnici della connessione, come l\'indirizzo IP. Non ricevono i dati dei colli. Per sapere come li usano, leggi la':'The page is hosted on GitHub Pages and loads two libraries from cdnjs (Cloudflare). Like any website, these services receive the technical data of the connection, such as the IP address. They do not receive your package data. To learn how they use it, read the',
